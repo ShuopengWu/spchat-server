@@ -9,6 +9,7 @@ class Session:
     uid: str
     hashed_refresh_token: str
     exp: datetime
+    scope: str = "read"
 
 
 _sessions: dict[str, Session] = {}
