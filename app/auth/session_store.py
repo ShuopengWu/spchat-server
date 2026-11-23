@@ -45,3 +45,18 @@ def replace(session_id: str, expected_hash: str, session: Session) -> bool:
             return False
         _sessions[session_id] = session
         return True
+
+
+def revoke_uid(uid: str) -> None:
+    with _lock:
+        for session_id, session in list(_sessions.items()):
+            if session.uid == uid:
+                _sessions.pop(session_id, None)
+
+
+def revoke_refresh_token(token_hash: str) -> None:
+    import hmac
+    with _lock:
+        for session_id, session in list(_sessions.items()):
+            if hmac.compare_digest(session.hashed_refresh_token, token_hash):
+                _sessions.pop(session_id, None)
