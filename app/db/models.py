@@ -18,4 +18,4 @@ class User(SQLModel, table=True):
     bio: str | None = Field(default=None, max_length=200)
     avatar_color: str = Field(default="#6C8EF5")
     updated_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    is_disable: bool = Field(default=False)
+    is_disable: bool = Field(default=True)
