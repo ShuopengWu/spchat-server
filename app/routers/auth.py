@@ -53,7 +53,7 @@ def login(body: LoginBody, response: Response, db: Session = Depends(get_session
         raise credentials_error()
     if body.scope == "all" and user.role != 0:
         raise HTTPException(status_code=403, detail="all scope 仅管理员可用")
-    access_token, refresh_token, session_id = create_token_pair(user.uid)
+    access_token, refresh_token, session_id = create_token_pair(user.uid, body.scope)
     auth_session = get_auth_session(session_id)
     set_refresh_cookie(response, refresh_token, auth_session.exp)
     return TokenResponse(access_token=access_token, username=user.username, token_type="Bearer")
@@ -85,10 +85,10 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_sess
         delete(session_id)
         raise HTTPException(status_code=403, detail="用户不存在或已被禁用")
     new_refresh = secrets.token_urlsafe(48)
-    rotated = AuthSession(uid=current.uid, hashed_refresh_token=hash_token(new_refresh), exp=current.exp)
+    rotated = AuthSession(uid=current.uid, hashed_refresh_token=hash_token(new_refresh), exp=current.exp, scope=current.scope)
     if not replace(session_id, old_hash, rotated):
         raise HTTPException(status_code=401, detail="Refresh token 已被轮换，请重新登录")
-    new_access = create_access_token(current.uid, session_id)
+    new_access = create_access_token(current.uid, session_id, current.scope)
     set_refresh_cookie(response, new_refresh, current.exp)
     return RefreshResponse(access_token=new_access, token_type="Bearer")
 
